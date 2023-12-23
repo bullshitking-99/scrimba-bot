@@ -9,10 +9,11 @@ import { useEffect } from "react";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { PromptTemplate } from "langchain/prompts";
 
-const sbApiKey =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imttbm5xemFvYnVjYmx5d3llZW9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDIyMjA3NjIsImV4cCI6MjAxNzc5Njc2Mn0.VEobY_9tF_oG6IYipLvzI3LjdGBRD4E250nKvjT5OQk";
-const sbUrl = "https://kmnnqzaobucblywyeeog.supabase.co";
-const openAIApiKey = "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";
+const {
+  VITE_sbApiKey: sbApiKey,
+  VITE_sbUrl: sbUrl,
+  VITE_openAIApiKey: openAIApiKey,
+} = import.meta.env;
 
 function App() {
   async function chunk_split_embedding_store() {
@@ -47,21 +48,16 @@ function App() {
 
   async function generate_standAlone_Input() {
     const llm = new ChatOpenAI({ openAIApiKey });
-
     const standaloneQuestionTemplate =
       "Given a question, convert it to a standalone question. question: {question} standalone question:";
-
     const standaloneQuestionPrompt = PromptTemplate.fromTemplate(
       standaloneQuestionTemplate
     );
-
     const standaloneQuestionChain = standaloneQuestionPrompt.pipe(llm);
-
     const response = await standaloneQuestionChain.invoke({
       question:
         "What are the technical requirements for running Scrimba? I only have a very old laptop which is not that powerful.",
     });
-
     console.log(response);
   }
 
