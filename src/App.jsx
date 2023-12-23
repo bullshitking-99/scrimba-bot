@@ -6,6 +6,14 @@ import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import info from "./assets/scrimba-info.txt";
 import { useEffect } from "react";
 
+import { ChatOpenAI } from "langchain/chat_models/openai";
+import { PromptTemplate } from "langchain/prompts";
+
+const sbApiKey =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imttbm5xemFvYnVjYmx5d3llZW9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDIyMjA3NjIsImV4cCI6MjAxNzc5Njc2Mn0.VEobY_9tF_oG6IYipLvzI3LjdGBRD4E250nKvjT5OQk";
+const sbUrl = "https://kmnnqzaobucblywyeeog.supabase.co";
+const openAIApiKey = "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";
+
 function App() {
   async function chunk_split_embedding_store() {
     try {
@@ -20,12 +28,6 @@ function App() {
 
       const output = await splitter.createDocuments([text]);
 
-      const sbApiKey =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imttbm5xemFvYnVjYmx5d3llZW9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDIyMjA3NjIsImV4cCI6MjAxNzc5Njc2Mn0.VEobY_9tF_oG6IYipLvzI3LjdGBRD4E250nKvjT5OQk";
-      const sbUrl = "https://kmnnqzaobucblywyeeog.supabase.co";
-      const openAIApiKey =
-        "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";
-
       const client = createClient(sbUrl, sbApiKey);
 
       const res = await SupabaseVectorStore.fromDocuments(
@@ -37,16 +39,41 @@ function App() {
         }
       );
 
-      console.log(res);
+      // console.log(res);
     } catch (err) {
       console.log("error occur:", err);
     }
   }
 
+  async function generate_standAlone_Input() {
+    const llm = new ChatOpenAI({ openAIApiKey });
+
+    const standaloneQuestionTemplate =
+      "Given a question, convert it to a standalone question. question: {question} standalone question:";
+
+    const standaloneQuestionPrompt = PromptTemplate.fromTemplate(
+      standaloneQuestionTemplate
+    );
+
+    const standaloneQuestionChain = standaloneQuestionPrompt.pipe(llm);
+
+    const response = await standaloneQuestionChain.invoke({
+      question:
+        "What are the technical requirements for running Scrimba? I only have a very old laptop which is not that powerful.",
+    });
+
+    console.log(response);
+  }
+
+  async function retrieval() {}
+
   async function setup() {
     // 初始背景文档获取、分块、向量化、存储
     // await chunk_split_embedding_store();
+
     // 根据input生成standAloneInput
+    await generate_standAlone_Input();
+
     // 在向量数据库中查找最近解
     // 序列化处理原始input
   }
