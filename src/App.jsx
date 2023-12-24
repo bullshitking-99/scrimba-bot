@@ -9,7 +9,7 @@ import {
 } from "langchain/schema/runnable";
 
 import info from "./assets/scrimba-info.txt";
-import { useEffect } from "react";
+import { useEffect, useState, useRef } from "react";
 import { retriever, embeddings, client, llm } from "./utils/common";
 import { combineDocuments } from "./utils/combineDocuments";
 
@@ -44,14 +44,14 @@ function App() {
     }
   }
 
-  async function standalone_retrievel_answer() {
+  async function standalone_retrievel_answer(input) {
     const standaloneQuestionTemplate =
       "Given a question, convert it to a standalone question. question: {question} standalone question:";
     const standaloneQuestionPrompt = PromptTemplate.fromTemplate(
       standaloneQuestionTemplate
     );
 
-    const answerTemplate = `You are a helpful and enthusiastic support bot who can answer a given question about Scrimba based on the context provided. Try to find the answer in the context. If you really don't know the answer, say "I'm sorry, I don't know the answer to that." And direct the questioner to email help@scrimba.com. Don't try to make up an answer. Always speak as if you were chatting to a friend.
+    const answerTemplate = `You are a helpful and enthusiastic support bot who can answer a given question about Scrimba based on the context provided. Try to find the answer in the context. If you really don't know the answer, say "I'm sorry, I don't know the answer to that." And direct the questioner to email help@scrimba.com. Don't try to make up an answer. Always speak as if you were chatting to a friend. translate the answer to Chinese.
 context: {context}
 question: {question}
 answer: 
@@ -83,11 +83,10 @@ answer:
     ]);
 
     const response = await chain.invoke({
-      question:
-        "What are the technical requirements for running Scrimba? I only have a very old laptop which is not that powerful.",
+      question: input,
     });
 
-    console.log(response);
+    return response;
   }
 
   async function punctuation_grammar_translate(input) {
@@ -139,28 +138,105 @@ answer:
 
     const response = await chain.invoke({
       sentence: input,
-      language: "chinese",
+      language: "English",
     });
 
-    console.log(response);
+    return response;
   }
 
   async function setup() {
-    const input = "i dont liked mondays";
-
     // 初始背景文档获取、分块、向量化、存储
     // await chunk_split_embedding_store();
-
     // 根据input生成standAloneInput，在向量数据库中查找最近解
-    await generate_standAloneInput_retrievel();
-
+    // await standalone_retrievel_answer();
     // 序列化纠正原始input
     // await punctuation_grammar_translate(input);
   }
 
   useEffect(() => setup, []);
 
-  return <h1>?</h1>;
+  // 对话记录
+  const [log, setLog] = useState(["你好，我是Scrimba，有什么能够帮你？"]);
+
+  const addLog = (n) => setLog((old) => [...old, n]);
+
+  const [inputValue, setInputValue] = useState("");
+
+  const handleInputChange = (event) => {
+    setInputValue(event.target.value);
+  };
+
+  const [loading, setLoading] = useState(true);
+
+  const chatbotConversationRef = useRef(null);
+  const scrollToBottom = () => {
+    if (chatbotConversationRef.current) {
+      chatbotConversationRef.current.scrollTop =
+        chatbotConversationRef.current.scrollHeight;
+    }
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault(); // 阻止默认提交行为
+    addLog(inputValue);
+    const _inputValue = inputValue;
+    setInputValue("");
+    // const input = await punctuation_grammar_translate(_inputValue);
+    // console.log(input);
+    setLoading(true);
+    const res = await standalone_retrievel_answer(_inputValue);
+    addLog(res);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    // 在组件挂载时或者其他时机执行滚动到底部的逻辑
+    scrollToBottom();
+  }, [log]); // 这里空数组表示只在组件挂载时执行一次
+
+  return (
+    <main>
+      <section className="chatbot-container">
+        <div className="chatbot-header">
+          {/* <img src="./assets/logo-scrimba.svg" className="logo" /> */}
+          <p className="sub-heading">Knowledge Bank</p>
+        </div>
+        <div
+          className="chatbot-conversation-container"
+          id="chatbot-conversation-container"
+          ref={chatbotConversationRef}
+        >
+          {log.map((l, i) => (
+            <div
+              key={l + i}
+              className={`speech ${i % 2 ? "speech-human" : "speech-ai"}`}
+            >
+              {l}
+            </div>
+          ))}
+          {/* {loading && <img src="./assets/loading.svg" />} */}
+        </div>
+        <form
+          id="form"
+          className="chatbot-input-container"
+          onSubmit={handleSubmit}
+        >
+          <input
+            name="user-input"
+            type="text"
+            id="user-input"
+            required
+            value={inputValue}
+            onChange={handleInputChange}
+          />
+          <button id="submit-btn" className="submit-btn">
+            send
+            {/* <img src="./assets/send.svg" className="send-btn-icon" /> */}
+          </button>
+        </form>
+      </section>
+    </main>
+  );
 }
 
 export default App;
