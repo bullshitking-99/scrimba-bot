@@ -44,7 +44,7 @@ function App() {
     }
   }
 
-  async function generate_standAloneInput_retrievel() {
+  async function standalone_retrievel_answer() {
     const standaloneQuestionTemplate =
       "Given a question, convert it to a standalone question. question: {question} standalone question:";
     const standaloneQuestionPrompt = PromptTemplate.fromTemplate(
@@ -58,12 +58,29 @@ answer:
 `;
     const answerPrompt = PromptTemplate.fromTemplate(answerTemplate);
 
-    const chain = standaloneQuestionPrompt
+    const standaloneQuestionChain = standaloneQuestionPrompt
       .pipe(llm)
-      .pipe(new StringOutputParser())
-      .pipe(retriever)
-      .pipe(combineDocuments);
-    // .pipe(answerPrompt);
+      .pipe(new StringOutputParser());
+
+    const retrieverChain = RunnableSequence.from([
+      ({ standalone_question }) => standalone_question,
+      retriever,
+      combineDocuments,
+    ]);
+
+    const answerChain = answerPrompt.pipe(llm).pipe(new StringOutputParser());
+
+    const chain = RunnableSequence.from([
+      {
+        standalone_question: standaloneQuestionChain,
+        original_input: new RunnablePassthrough(),
+      },
+      {
+        context: retrieverChain,
+        question: ({ original_input }) => original_input.question,
+      },
+      answerChain,
+    ]);
 
     const response = await chain.invoke({
       question:
@@ -115,7 +132,6 @@ answer:
       },
       {
         grammatically_correct_sentence: grammarChain,
-        // original_input: (original_input) => console.log(original_input),
         language: ({ original_input }) => original_input.language,
       },
       translationChain,
@@ -136,7 +152,7 @@ answer:
     // await chunk_split_embedding_store();
 
     // 根据input生成standAloneInput，在向量数据库中查找最近解
-    // await generate_standAloneInput_retrievel();
+    await generate_standAloneInput_retrievel();
 
     // 序列化纠正原始input
     // await punctuation_grammar_translate(input);
