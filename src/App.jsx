@@ -12,6 +12,7 @@ import info from "./assets/scrimba-info.txt";
 import { useEffect, useState, useRef } from "react";
 import { retriever, embeddings, client, llm } from "./utils/common";
 import { combineDocuments } from "./utils/combineDocuments";
+import { formatConvHistory } from "./utils/formatConvHistory";
 import Loading from "./components/loading";
 import Send from "./components/send";
 
@@ -158,7 +159,7 @@ answer:
   useEffect(() => setup, []);
 
   // 对话记录
-  const [log, setLog] = useState(["你好，我是Scrimba，有什么能够帮你？"]);
+  const [log, setLog] = useState(["你好，我来自Scrimba，有什么能够帮你？"]);
 
   const addLog = (n) => setLog((old) => [...old, n]);
 
@@ -196,9 +197,12 @@ answer:
     }
   };
 
+  const convHistory = useRef([]);
+
   useEffect(() => {
     // 在组件挂载时或者其他时机执行滚动到底部的逻辑
     scrollToBottom();
+    convHistory.current = formatConvHistory(log);
   }, [log]); // 这里空数组表示只在组件挂载时执行一次
 
   return (
