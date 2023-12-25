@@ -12,6 +12,8 @@ import info from "./assets/scrimba-info.txt";
 import { useEffect, useState, useRef } from "react";
 import { retriever, embeddings, client, llm } from "./utils/common";
 import { combineDocuments } from "./utils/combineDocuments";
+import Loading from "./components/loading";
+import Send from "./components/send";
 
 const {
   VITE_sbApiKey: sbApiKey,
@@ -166,7 +168,7 @@ answer:
     setInputValue(event.target.value);
   };
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const chatbotConversationRef = useRef(null);
   const scrollToBottom = () => {
@@ -181,12 +183,17 @@ answer:
     addLog(inputValue);
     const _inputValue = inputValue;
     setInputValue("");
-    // const input = await punctuation_grammar_translate(_inputValue);
-    // console.log(input);
-    setLoading(true);
-    const res = await standalone_retrievel_answer(_inputValue);
-    addLog(res);
-    setLoading(false);
+    try {
+      setLoading(true);
+      // const input = await punctuation_grammar_translate(_inputValue);
+      // console.log(input);
+      const res = await standalone_retrievel_answer(_inputValue);
+      addLog(res);
+    } catch (error) {
+      addLog("抱歉，好像发生了一些未知错误，请检查一些网络环境或稍后再试。");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -214,7 +221,7 @@ answer:
               {l}
             </div>
           ))}
-          {/* {loading && <img src="./assets/loading.svg" />} */}
+          {loading && <Loading />}
         </div>
         <form
           id="form"
@@ -230,8 +237,7 @@ answer:
             onChange={handleInputChange}
           />
           <button id="submit-btn" className="submit-btn">
-            send
-            {/* <img src="./assets/send.svg" className="send-btn-icon" /> */}
+            <Send />
           </button>
         </form>
       </section>

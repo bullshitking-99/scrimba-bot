@@ -18,7 +18,7 @@ body {
 
 main {
   background-color: slategrey;
-  background-image: url("images/scrimba-bg.jpeg");
+  background-image: url("./assets/2cybznewszi.jpg");
   background-size: cover;
   background-repeat: no-repeat;
   height: 100vh;
@@ -118,9 +118,11 @@ button {
   border-bottom-left-radius: 0;
 }
 
-.send-btn-icon {
-  width: 20px;
-  display: block;
+#sendSvg path:hover {
+  /* 设置悬停时的颜色 */
+  stroke: #fefefe;
+  /* 可以添加其他样式，比如填充颜色 */
+  /* fill: #ffffff; */
 }
 
 /* text */
