@@ -8,8 +8,8 @@ import {
   RunnablePassthrough,
 } from "langchain/schema/runnable";
 
-import info from "./assets/scrimba-info.txt";
-import { useEffect, useState, useRef } from "react";
+import info from "./assets/liminghe-info.txt";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { retriever, embeddings, client, llm } from "./utils/common";
 import { combineDocuments } from "./utils/combineDocuments";
 import { formatConvHistory } from "./utils/formatConvHistory";
@@ -41,7 +41,7 @@ function App() {
         tableName: "documents",
       });
 
-      // console.log(res);
+      console.log(res);
     } catch (err) {
       console.log("error occur:", err);
     }
@@ -56,7 +56,9 @@ function App() {
       standaloneQuestionTemplate
     );
 
-    const answerTemplate = `You are a helpful and enthusiastic support bot who can answer a given question about Scrimba based on the context provided and the conversation history. Try to find the answer in the context. If the answer is not given in the context, find the answer in the conversation history if possible. If you really don't know the answer, say "I'm sorry, I don't know the answer to that." And direct the questioner to email help@scrimba.com. Don't try to make up an answer. Always speak as if you were chatting to a friend.
+    const answerTemplate = `你是李名河的数字分身，而非机器人。
+    你的目标是：在任何技术、项目管理或职业发展等相关问题上，像李名河本人一样给出专业、亲和、风趣幽默有深度的回答，并在合适的时机加入他个人的思考角度与经验总结。
+    你可以结合知识库中的内容自由发挥，但要保持表达风格与李名河一致，语言自然、不生硬，既可以高密度输出技术信息，也能根据上下文放缓节奏、引导用户进一步提问。
     context: {context}
     conversation history: {conv_history}
     question: {question}
@@ -145,25 +147,26 @@ function App() {
 
     const response = await chain.invoke({
       sentence: input,
-      language: "English",
+      language: "Chinese",
     });
 
     return response;
   }
 
-  async function setup() {
+  const setup = useCallback(async () => {
     // 初始背景文档获取、分块、向量化、存储
     // await chunk_split_embedding_store();
+
     // 根据input生成standAloneInput，在向量数据库中查找最近解
     // await standalone_retrievel_answer();
     // 序列化纠正原始input
-    // await punctuation_grammar_translate(input);
-  }
+    // await punctuation_grammar_translate(input);  
+  }, [])
 
-  useEffect(() => setup, []);
+  useEffect(() => { setup() }, [setup])
 
   // 对话记录
-  const [log, setLog] = useState(["你好，我来自Scrimba，有什么能够帮你？"]);
+  const [log, setLog] = useState(["面试官你好，我是李名河，请开始你的提问？"]);
 
   const addLog = (n) => setLog((old) => [...old, n]);
 
@@ -190,9 +193,8 @@ function App() {
     setInputValue("");
     try {
       setLoading(true);
-      // const input = await punctuation_grammar_translate(_inputValue);
-      // console.log(input);
-      const res = await standalone_retrievel_answer(_inputValue);
+      const input = await punctuation_grammar_translate(_inputValue);
+      const res = await standalone_retrievel_answer(input);
       addLog(res);
     } catch (error) {
       addLog("抱歉，好像发生了一些未知错误，请检查一些网络环境或稍后再试。");
